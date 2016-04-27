@@ -1,0 +1,130 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+public partial class register : System.Web.UI.Page
+{
+    SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["mycon"].ConnectionString);
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        btnupdate.Visible = false;
+    }
+    protected void btnsubmit_Click(object sender, EventArgs e)
+    {
+        string filename = FileUpload1.PostedFile.FileName;
+        int filelength = FileUpload1.PostedFile.ContentLength;
+        byte[] imagebytes = new byte[filelength];
+        FileUpload1.PostedFile.InputStream.Read(imagebytes, 0, filelength);
+
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["mycon"].ConnectionString);
+        SqlCommand cmd = new SqlCommand("insert into login(profilename,username,profilepic,email,password,cnfmpassword,gid,contactno,address,rollid,createdon) values(@profilename,@username,@profilepic,@email,@password,@cnfmpassword,@gid,@contactno,@address,@rollid,@createdon) ",con);
+        cmd.Parameters.AddWithValue("@profilename",txtprofilename.Text);
+        cmd.Parameters.AddWithValue("@username",txtusername.Text);
+        cmd.Parameters.AddWithValue("@profilepic", imagebytes);        
+        cmd.Parameters.AddWithValue("@email",txtemail.Text);
+        cmd.Parameters.AddWithValue("@password",txtpassword.Text);
+        cmd.Parameters.AddWithValue("@cnfmpassword",txtcnfmpassword.Text);
+        cmd.Parameters.AddWithValue("@gid",rblgender.SelectedValue);
+        cmd.Parameters.AddWithValue("@contactno",txtcontactno.Text);
+        cmd.Parameters.AddWithValue("@address",txtaddress.Text);
+        cmd.Parameters.AddWithValue("@rollid",2);
+        cmd.Parameters.AddWithValue("@createdon",DateTime.Now);
+        cmd.Parameters.AddWithValue("@isactive",cbisactive.Checked);
+        con.Open();
+        cmd.ExecuteNonQuery();
+        con.Close();
+        LoadGrid();
+        clear();
+   }
+
+    private void LoadGrid()
+    {
+        SqlCommand cmd = new SqlCommand("select * from login",con);
+        con.Open();
+        gvmain.DataBind();
+        con.Close();
+    }
+
+
+    protected void btnupdate_Click(object sender, EventArgs e)
+    {
+        int vid = int.Parse(ViewState["gvid"].ToString());
+         string filename = FileUpload1.PostedFile.FileName;
+        int filelength = FileUpload1.PostedFile.ContentLength;
+        byte[] imagebytes = new byte[filelength];
+        FileUpload1.PostedFile.InputStream.Read(imagebytes, 0, filelength);
+
+
+
+        SqlCommand cmd = new SqlCommand("update login set profilename=@profilename,username=@username,profilepic=@profilepic,email=@email,password=@password,cnfmpassword=@cnfmpassword,gid=@gid,contactno=@contactno,address=@address,rollid=@rollid,createdon=@createdon,isactive=@isactive where lid=@vid ", con);
+        cmd.Parameters.AddWithValue("@vid", vid);
+        cmd.Parameters.AddWithValue("@profilename", txtprofilename.Text);
+        cmd.Parameters.AddWithValue("@username", txtusername.Text);
+        cmd.Parameters.AddWithValue("@profilepic", imagebytes);
+        cmd.Parameters.AddWithValue("@email", txtemail.Text);
+        cmd.Parameters.AddWithValue("@password", txtpassword.Text);
+        cmd.Parameters.AddWithValue("@cnfmpassword", txtcnfmpassword.Text);
+        cmd.Parameters.AddWithValue("@gid", rblgender.Text);
+        cmd.Parameters.AddWithValue("@contactno", txtcontactno.Text);
+        cmd.Parameters.AddWithValue("@address", txtaddress.Text);
+        cmd.Parameters.AddWithValue("@rollid", ddlroll.Text);
+        cmd.Parameters.AddWithValue("@createdon", DateTime.Now);
+        cmd.Parameters.AddWithValue("@isactive", cbisactive.Checked);
+
+
+        con.Open();
+        cmd.ExecuteNonQuery();
+        con.Close();
+        LoadGrid();
+        clear();
+    }
+    protected void gvmain_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        btnupdate.Visible = true;
+        SqlCommand cmd = new SqlCommand("select * from login where lid=@lid", con);
+        ViewState["gvid"] = gvmain.SelectedValue;
+        cmd.Parameters.AddWithValue("@lid", gvmain.SelectedValue);
+        con.Open();
+        SqlDataReader dr = cmd.ExecuteReader();
+        while (dr.Read())
+        {
+            txtprofilename.Text = dr["profilename"].ToString();
+            txtusername.Text = dr["username"].ToString();
+
+            txtemail.Text = dr["email"].ToString();
+            txtpassword.Text = dr["password"].ToString();
+            txtcnfmpassword.Text = dr["password"].ToString();
+            rblgender.Text = dr["gid"].ToString();
+            txtcontactno.Text = dr["contactno"].ToString();
+            txtaddress.Text = dr["address"].ToString();
+            ddlroll.Text = dr["rollid"].ToString();
+            cbisactive.Text = dr["isactive"].ToString();
+
+        }
+        con.Close();
+    }
+    private void clear()
+    { 
+    txtprofilename.Text="";
+       txtusername.Text="";
+       txtemail.Text="";
+       txtpassword.Text="";
+       txtcnfmpassword.Text="";
+       
+       txtcontactno.Text="";
+       txtaddress.Text="";
+       ddlroll.SelectedValue="";
+       cbisactive.Checked = false;
+    
+    }
+    protected void btnlogin_Click(object sender, EventArgs e)
+    {
+        Response.Redirect("login.aspx");
+    }
+}

@@ -1,0 +1,106 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+public partial class Admin_register : System.Web.UI.Page
+{
+    SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["mycon"].ConnectionString);
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        btnupdate.Visible = false;
+    }
+
+    protected void btnsubmit_Click(object sender, EventArgs e)
+    {
+
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["mycon"].ConnectionString);
+        SqlCommand cmd = new SqlCommand("insert into login(profilename,username,email,password,cnfmpassword,gid,contactno,address,rollid,createdon) values(@profilename,@username,@email,@password,@cnfmpassword,@gid,@contactno,@address,@rollid,@createdon) ", con);
+        cmd.Parameters.AddWithValue("@profilename", txtprofilename.Text);
+        cmd.Parameters.AddWithValue("@username", txtusername.Text);
+        cmd.Parameters.AddWithValue("@email", txtemail.Text);
+        cmd.Parameters.AddWithValue("@password", txtpassword.Text);
+        cmd.Parameters.AddWithValue("@cnfmpassword", txtcnfmpassword.Text);
+        cmd.Parameters.AddWithValue("@gid", rblgender.SelectedValue);
+        cmd.Parameters.AddWithValue("@contactno", txtcontactno.Text);
+        cmd.Parameters.AddWithValue("@address", txtaddress.Text);
+        cmd.Parameters.AddWithValue("@rollid", ddlroll.SelectedValue);
+        cmd.Parameters.AddWithValue("@createdon", DateTime.Now);
+        cmd.Parameters.AddWithValue("@isactive", cbisactive.Checked);
+        con.Open();
+        cmd.ExecuteNonQuery();
+        con.Close();
+    }
+
+    private void LoadGrid()
+    {
+        SqlCommand cmd = new SqlCommand("select * from login", con);
+        con.Open();
+        gvmain.DataBind();
+        con.Close();
+    }
+
+
+
+    protected void btnupdate_Click(object sender, EventArgs e)
+    {
+        int vid = int.Parse(ViewState["gvid"].ToString());
+
+
+        SqlCommand cmd = new SqlCommand("update login set profilename=@profilename,username=@username,email=@email,password=@password,cnfmpassword=@cnfmpassword,gid=@gid,contactno=@contactno,address=@address,rollid=@rollid,createdon=@createdon,isactive=@isactive where lid=@vid ", con);
+        cmd.Parameters.AddWithValue("@vid", vid);
+        cmd.Parameters.AddWithValue("@profilename", txtprofilename.Text);
+        cmd.Parameters.AddWithValue("@username", txtusername.Text);
+        cmd.Parameters.AddWithValue("@email", txtemail.Text);
+        cmd.Parameters.AddWithValue("@password", txtpassword.Text);
+        cmd.Parameters.AddWithValue("@cnfmpassword", txtcnfmpassword.Text);
+        cmd.Parameters.AddWithValue("@gid", rblgender.Text);
+        cmd.Parameters.AddWithValue("@contactno", txtcontactno.Text);
+        cmd.Parameters.AddWithValue("@address", txtaddress.Text);
+        cmd.Parameters.AddWithValue("@rollid", ddlroll.Text);
+        cmd.Parameters.AddWithValue("@createdon", DateTime.Now);
+        cmd.Parameters.AddWithValue("@isactive", cbisactive.Checked);
+
+
+        con.Open();
+        cmd.ExecuteNonQuery();
+        con.Close();
+        LoadGrid();
+    }
+    protected void gvmain_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        btnupdate.Visible = true;
+        SqlCommand cmd = new SqlCommand("select * from login where lid=@lid", con);
+        ViewState["gvid"] = gvmain.SelectedValue;
+        cmd.Parameters.AddWithValue("@lid", gvmain.SelectedValue);
+        con.Open();
+        SqlDataReader dr = cmd.ExecuteReader();
+        while (dr.Read())
+        {
+            txtprofilename.Text = dr["profilename"].ToString();
+            txtusername.Text = dr["username"].ToString();
+            txtemail.Text = dr["email"].ToString();
+            txtpassword.Text = dr["password"].ToString();
+            txtcnfmpassword.Text = dr["password"].ToString();
+            rblgender.Text = dr["gid"].ToString();
+            txtcontactno.Text = dr["contactno"].ToString();
+            txtaddress.Text = dr["address"].ToString();
+            ddlroll.Text = dr["rollid"].ToString();
+            cbisactive.Text = dr["isactive"].ToString();
+
+        }
+        con.Close();
+    }
+
+
+    protected void btnlogin_Click1(object sender, EventArgs e)
+    {
+        Response.Redirect("login.aspx");
+
+    }
+}
